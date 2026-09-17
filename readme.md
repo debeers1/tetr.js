@@ -1,3 +1,25 @@
+# Tetr.js — 40G JDB & Dig! JKnack
+
+A browser-playable customization of [Farter’s Dig Mod](https://github.com/farteryhr/tetr.js), retaining the original authors’ credits and MIT license.
+
+[**Play the game**](https://debeers1.github.io/tetr.js/)
+
+## Added modes
+
+- **40G JDB:** instant gravity, Marathon level-40 timing, no entry delay, and a 300-line finish.
+- **+1 Dig! JKnack:** original Dig garbage patterns with 20G gravity and timing progression; endless until top-out. Garbage continues rising during entry delay.
+- Original **20G** remains available. The earlier custom 30G menu entry has been removed; its replay support remains for compatibility.
+
+Choose a mode in the menu to play. Controls and handling can be customized in the game. Each browser stores its own preferences.
+
+## Hosting
+
+This is a static HTML/CSS/JavaScript game. Publish the root of the `gh-pages` branch with GitHub Pages. No installation or account is needed to play.
+
+The legacy upstream leaderboard uses an external HTTP service and is not supported on this HTTPS-hosted copy. The custom modes do not submit scores. Local replay export/import is supported. Historical navigation links belong to the original site.
+
+## Upstream project
+
 # tetr.js
 
 [Have a try](http://farter.cn/tetr.js) in your browser.

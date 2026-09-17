@@ -344,6 +344,9 @@ function init(gt, params) {
         ) {
           throw "something's missing...";
         }
+        if ((replay.gametype === 8 || replay.gametype === 9 || replay.gametype === 10) && (!replay.gameparams || replay.gameparams.rulesVersion !== 1)) {
+          throw "unsupported " + (replay.gametype === 10 ? "Dig! JKnack" : (replay.gametype === 9 ? "40G" : "30G")) + " replay rules version";
+        }
         try{
           tryUpgradeSetting(replay.settings);
         }catch(e){
@@ -366,7 +369,7 @@ function init(gt, params) {
     watchingReplay = false;
     settings = ObjectClone(mySettings); // by value: prevent from being modified when paused
     gametype = gt;
-    gameparams = params || {};
+    gameparams = params || ((gt === 8 || gt === 9 || gt === 10) ? {rulesVersion:1} : {});
 
     var seed = ~~(Math.random() * 2147483645) + 1;
     rng.seed = seed;
@@ -404,7 +407,7 @@ function init(gt, params) {
 
   b2b = 0;
   combo = 0;
-  level = 0;
+  level = gametype === 9 ? 40 : (gametype === 8 ? 30 : 0);
   allclear = 0;
   statsFinesse = 0;
   lines = 0;
@@ -425,7 +428,7 @@ function init(gt, params) {
     lineLimit = 0;
 
   digLines = [];
-  if (gametype === 3) {
+  if (gametype === 3 || gametype === 10) {
     frameLastRise = 0;
     frameLastHarddropDown = 0;
   }
@@ -543,7 +546,7 @@ function init(gt, params) {
   touchButtonsToggle();
 
   resize();
-  $setText(statsModeId,getmodeid().toUpperCase());
+  $setText(statsModeId, gametype === 10 ? "Dig! JKnack" : (gametype === 9 ? "40G JDB" : getmodeid().toUpperCase()));
 }
 
 /**
@@ -650,7 +653,7 @@ function statisticsStack() {
   if(gametype === 0 || gametype === 5) {
     $setText(statsLines, lineLimit - lines);
     $setText(statsLevel, "");
-  }else if(gametype === 1 || gametype === 6 || gametype === 7){
+  }else if(gametype === 1 || gametype === 6 || gametype === 7 || gametype === 8 || gametype === 9 || gametype === 10){
     $setText(statsLines, lines);
     $setText(statsLevel, "Lv. " + level);
   }else if (gametype === 3){
@@ -1031,45 +1034,8 @@ function update() {
       break;
     }
 
-    if(gametype === 3) { //Dig
-      var fromLastRise = frame-frameLastRise;
-      var fromLastHD = (flags.hardDrop & keysDown)?(frame-frameLastHarddropDown):0;
-      var curStage = 0, objCurStage;
-      while(
-        curStage<arrStages.length &&
-        arrStages[curStage].begin <= lines + (gameparams.digOffset || 0)
-      ) {
-        curStage++;
-      }
-      curStage--;
-      objCurStage = arrStages[curStage];
-      if(fromLastRise >= objCurStage.delay || (fromLastHD >= 20 && fromLastRise >= 15)) {
-        var arrRow = [8,8,8,8,8,8,8,8,8,8];
-        //IJLOSTZ
-        var arrRainbow=[
-          2,-1,1,5,4,3,7,6,-1,8,
-          8,8,8,6,6,2,1,5,8,-1,
-          7,7,-1,8,8];
-        var idxRainbow,flagAll,colorUsed;
-        idxRainbow = ~~(objCurStage.begin/100);
-        flagAll = (~~(objCurStage.begin/50))%2;
-        if(idxRainbow >= arrRainbow.length) {
-          idxRainbow = arrRainbow.length - 1;
-        }
-        colorUsed = arrRainbow[idxRainbow];
-        for(var x=0; x<stack.width; x+=(flagAll===1?1:(stack.width-1))) {
-          if(colorUsed===-1) {
-            arrRow[x]=~~(rng.next()*8+1);
-          } else {
-            arrRow[x]=colorUsed;
-          }
-        }
-
-        objCurStage.gen(arrRow);
-        stack.rowRise(arrRow, piece);
-        frameLastRise=frame;
-        sound.playse("garbage");
-      }
+    if(gametype === 3 || gametype === 10) { // Dig garbage
+      updateDigGarbage();
     }else if(gametype===7) { //dig zen
       for(;lastPiecesSet<piecesSet;lastPiecesSet++){
         digZenBuffer++;
@@ -1093,6 +1059,48 @@ function update() {
   } while(false) // break when game over
 
   updateScoreTime();
+}
+
+// Shared original Dig pattern/timer; JKnack also advances it during entry delay.
+function updateDigGarbage() {
+  var fromLastRise = frame-frameLastRise;
+  var fromLastHD = (flags.hardDrop & keysDown)?(frame-frameLastHarddropDown):0;
+  var curStage = 0, objCurStage;
+  while(
+    curStage<arrStages.length &&
+    arrStages[curStage].begin <= lines + (gameparams.digOffset || 0)
+  ) {
+    curStage++;
+  }
+  curStage--;
+  objCurStage = arrStages[curStage];
+  if(fromLastRise >= objCurStage.delay || (fromLastHD >= 20 && fromLastRise >= 15)) {
+    var arrRow = [8,8,8,8,8,8,8,8,8,8];
+    //IJLOSTZ
+    var arrRainbow=[
+      2,-1,1,5,4,3,7,6,-1,8,
+      8,8,8,6,6,2,1,5,8,-1,
+      7,7,-1,8,8];
+    var idxRainbow,flagAll,colorUsed;
+    idxRainbow = ~~(objCurStage.begin/100);
+    flagAll = (~~(objCurStage.begin/50))%2;
+    if(idxRainbow >= arrRainbow.length) {
+      idxRainbow = arrRainbow.length - 1;
+    }
+    colorUsed = arrRainbow[idxRainbow];
+    for(var x=0; x<stack.width; x+=(flagAll===1?1:(stack.width-1))) {
+      if(colorUsed===-1) {
+        arrRow[x]=~~(rng.next()*8+1);
+      } else {
+        arrRow[x]=colorUsed;
+      }
+    }
+
+    objCurStage.gen(arrRow);
+    stack.rowRise(arrRow, piece);
+    frameLastRise=frame;
+    sound.playse("garbage");
+  }
 }
 
 var inloop = false; //debug
@@ -1175,6 +1183,8 @@ function gameLoop() {
           }
           scoreTime = 0;
         } else {
+          // JKnack garbage keeps rising on schedule during entry delay.
+          if (gametype === 10) updateDigGarbage();
           // are
           piece.are++;
           updateScoreTime();
@@ -1278,6 +1288,10 @@ function checkWin(){
     if (lines>=300) { // 200 + 100
       isend=true;
     }
+  } else if (gametype === 8 || gametype === 9) { // 30G/40G: clear 300 new lines
+    if (lines >= 300) {
+      isend=true;
+    }
   } else if (gametype === 7) { // dig zen
     if (lines>=400) { // 300 + 100
       isend=true;
@@ -1376,6 +1390,12 @@ function getmodeid(){
     return "score";
   else if(gametype===6) // 20g
     return "marathon20g";
+  else if(gametype===8) // 30G rules v1, separate from the original leaderboard
+    return "marathon30g-v1";
+  else if(gametype===10) // Dig! JKnack rules v1
+    return "digjknack-v1";
+  else if(gametype===9) // 40G rules v1
+    return "marathon40g-v1";
   else if(gametype===7) // dig zen
     return "digzen";
   else
@@ -1383,6 +1403,9 @@ function getmodeid(){
 }
 
 function trysubmitscore() {
+  // The upstream ranking server has no category for these custom modes. Replays remain local/exportable.
+  if(gametype===8 || gametype===9 || gametype===10)
+    return;
   if(watchingReplay)
     return;
   if(gametype===4 && gameparams.digraceType==="map")

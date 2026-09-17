@@ -68,7 +68,7 @@ Piece.prototype.new = function(index) {
   }
 
   this.lockDelayLimit = settings.LockDelay;
-  if (gametype === 6) { //Death
+  if (gametype === 6 || gametype === 10) { // 20G timing
     this.gravity = Infinity;
     if (level < 20) {
       this.lockDelayLimit = [
@@ -78,6 +78,9 @@ Piece.prototype.new = function(index) {
     } else {
       this.lockDelayLimit = 11;
     }
+  } else if (gametype === 8 || gametype === 9) { // 30G/40G v1: Marathon from level 30/40
+    this.gravity = Infinity;
+    this.lockDelayLimit = ~~(30 * Math.pow(0.93, Math.pow(level - 20, 0.8)));
   } else if (gametype === 1) { //Marathon
     if (gameparams.marathonType === 1) {
       this.gravity = (level * 2 + 10) / 60;
@@ -522,7 +525,7 @@ Piece.prototype.checkLock = function() {
         checkWin();
         if (gameState === 0 && piece.dead) { // still playing, then spawn the next piece
           // determine next ARE limit
-          if (gametype === 6) { //Death
+          if (gametype === 6 || gametype === 10) { // 20G timing
             if (level < 20) {
               this.areLimit = [
                 18, 18, 18, 15, 15, 12, 12, 12, 12, 12,
@@ -532,6 +535,8 @@ Piece.prototype.checkLock = function() {
               this.lockDelayLimit = 11;
               this.areLimit = 6;
             }
+          } else if (gametype === 8 || gametype === 9) { // 30G/40G: immediate next piece, regardless of settings
+            this.areLimit = 0;
           } else if (gametype === 1 && gameparams.marathonType === 1) {
             this.areLimit = 11;
           } else {

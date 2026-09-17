@@ -308,8 +308,10 @@ Stack.prototype.addPiece = function(piece) {
       combo = 0;
     }
     lines += lineClear;
-    if (gametype === 1 || gametype === 6) {
+    if (gametype === 1 || gametype === 6 || gametype === 10) {
       level = ~~(lines / 10);
+    } else if (gametype === 8 || gametype === 9) {
+      level = (gametype === 9 ? 40 : 30) + ~~(lines / 10);
     } else if (gametype === 7) {
       level = ~~(lines / 30);
     }
